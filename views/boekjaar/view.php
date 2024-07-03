@@ -1,9 +1,4 @@
 <?php
-// Schakel foutmeldingen in voor debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 // Start de sessie
 session_start();
 
@@ -17,11 +12,11 @@ if (!$conn) {
     exit();
 }
 
-// Maak een controller aan voor boekjaren
+// Maak controller aan voor boekjaren
 $boekjaarController = new BoekjaarController($conn);
 
 // Haal alle boekjaren op
-$boekjaren = $boekjaarController->getAll();
+$boekjaren = $boekjaarController->readAll();
 ?>
 
 <!DOCTYPE html>
@@ -43,13 +38,13 @@ $boekjaren = $boekjaarController->getAll();
         <nav>
             <ul>
                 <li><a href="../users/welcome.php">Dashboard</a></li>
-                <li><a href="../boekjaar/create.php">Boekjaar Toevoegen</a></li>
+                <li><a href="create.php">Boekjaar Toevoegen</a></li>
                 <li><a href="../../logout.php">Log uit</a></li>
             </ul>
         </nav>
         <div class="content">
-            <h2>Alle Boekjaren</h2>
-            <?php if (!empty($boekjaren)): ?>
+            <h2>Boekjaren</h2>
+            <!-- Tabel met alle boekjaren -->
             <table>
                 <thead>
                     <tr>
@@ -64,18 +59,14 @@ $boekjaren = $boekjaarController->getAll();
                         <td><?php echo htmlspecialchars($boekjaar['id']); ?></td>
                         <td><?php echo htmlspecialchars($boekjaar['jaar']); ?></td>
                         <td>
-                            <a href="edit.php?id=<?php echo htmlspecialchars($boekjaar['id']); ?>"
-                                class="action-link">Bewerken</a>
-                            <a href="delete.php?id=<?php echo htmlspecialchars($boekjaar['id']); ?>"
-                                class="action-link">Verwijderen</a>
+                            <a href="edit.php?id=<?php echo $boekjaar['id']; ?>">Bewerken</a>
+                            <a href="delete.php?id=<?php echo $boekjaar['id']; ?>"
+                                onclick="return confirm('Weet je zeker dat je dit boekjaar wilt verwijderen?');">Verwijderen</a>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            <?php else: ?>
-            <p>Geen boekjaren gevonden.</p>
-            <?php endif; ?>
         </div>
     </main>
     <footer>
