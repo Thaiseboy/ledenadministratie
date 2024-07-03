@@ -83,6 +83,13 @@ $message = isset($_GET['message']) ? $_GET['message'] : '';
             <?php else: ?>
             <p>Geen contributies gevonden.</p>
             <?php endif; ?>
+            <p>Op basis van de leeftijd in jaren en het soort lid is een afwijkende contributie van toepassing.</p><br>
+            <p><strong>Jeugd:</strong> Jonger dan 8 jaar 50% korting</p>
+            <p><strong>sprirant:</strong>A van 8 tot 12 jaar 40%</p>
+            <p><strong>Junior:</strong> Van 13 tot 17 jaar 25% korting</p>
+            <p><strong>Senior:</strong> Van 18 tot 50 jaar 0% korting</p>
+            <p><strong>Oudere:</strong> Vanaf 51 jaar 45% korting </p><br>
+            <p>Basisbedrag contributie is <strong>100,-</strong> per jaar</p>
         </div>
     </main>
     <footer>

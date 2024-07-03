@@ -1,18 +1,20 @@
 <?php
+// Include het Boekjaar model
+require_once '../../models/Boekjaar.php';
+
 class BoekjaarController {
     private $conn;
+    private $boekjaar;
 
     // Constructor om de databaseverbinding te initialiseren
     public function __construct($conn) {
         $this->conn = $conn;
+        $this->boekjaar = new Boekjaar($conn);
     }
 
     // Methode om alle boekjaren op te halen
-    public function getAll() {
-        $sql = "SELECT * FROM boekjaar";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function readAll() {
+        return $this->boekjaar->readAll();
     }
 
     // Methode om een boekjaar bij te werken

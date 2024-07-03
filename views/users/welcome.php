@@ -34,8 +34,8 @@ if (!isset($_SESSION['username'])) {
         <nav>
             <ul>
                 <li><a href="welcome.php">Dashboard</a></li>
-                <li><a href="../users/view.php">Familieleden</a></li>
                 <li><a href="../families/view.php">Families</a></li>
+                <li><a href="../users/view.php">Familieleden</a></li>
                 <li><a href="../boekjaar/view.php">Boekjaren</a></li>
                 <li><a href="../contributie/view.php">Contributies</a></li>
                 <li><a href="../../logout.php">Log uit</a></li>

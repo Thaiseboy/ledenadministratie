@@ -50,23 +50,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Bepaal het bedrag op basis van het soort lid
-    $bedrag = 0;
+    $bedrag = 100; // Basisbedrag
     switch ($soort_lid_id) {
         case 1:
-            $bedrag = 50; // Bedrag voor Jeugd
+            $bedrag *= 0.5; // 50% korting voor Jeugd
             break;
         case 2:
-            $bedrag = 60; // Bedrag voor Aspirant
+            $bedrag *= 0.6; // 40% korting voor Aspirant
             break;
         case 3:
-            $bedrag = 70; // Bedrag voor Junior
-            break;
-        case 4:
-            $bedrag = 100; // Bedrag voor Senior
+            $bedrag *= 0.75; // 25% korting voor Junior
             break;
         case 5:
-            $bedrag = 80; // Bedrag voor Oudere
+            $bedrag *= 0.55; // 45% korting voor Oudere
             break;
+        // Senior heeft geen korting
     }
 
     // Maak een nieuwe contributie aan en bewaar het bericht
@@ -77,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Haal alle familieleden en boekjaren op voor de dropdowns
 $familieleden = $familielidController->readAll();
-$boekjaren = $boekjaarController->getAll();
+$boekjaren = $boekjaarController->readAll();
 ?>
 
 <!DOCTYPE html>
@@ -114,6 +112,7 @@ $boekjaren = $boekjaarController->getAll();
                 <div>
                     <label for="familielid_id">Familielid</label>
                     <select id="familielid_id" name="familielid_id" required>
+                        <option value="">Selecteer een familielid</option>
                         <?php foreach ($familieleden as $familielid): ?>
                         <option value="<?php echo htmlspecialchars($familielid['id']); ?>">
                             <?php echo htmlspecialchars($familielid['naam']); ?>
@@ -124,6 +123,7 @@ $boekjaren = $boekjaarController->getAll();
                 <div>
                     <label for="boekjaar_id">Boekjaar</label>
                     <select id="boekjaar_id" name="boekjaar_id" required>
+                        <option value="">Selecteer een boekjaar</option>
                         <?php foreach ($boekjaren as $boekjaar): ?>
                         <option value="<?php echo htmlspecialchars($boekjaar['id']); ?>">
                             <?php echo htmlspecialchars($boekjaar['jaar']); ?>
