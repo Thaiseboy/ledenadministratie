@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 // Start de sessie
 session_start();
+
 // Vereiste configuratie- en controllerbestanden
 require_once '../../config/config.php';
 require_once '../../controllers/FamiliesController.php';
@@ -16,17 +17,16 @@ if (!$conn) {
     exit();
 }
 
-// Maak een nieuwe FamiliesController aan met de database verbinding
+// Maak een nieuwe FamiliesController aan met de databaseverbinding
 $familiesController = new FamiliesController($conn);
 
 $message = '';
 
-// Verwerken van het formulier bij een POST verzoek
+// Verwerken van het formulier bij een POST-verzoek
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $naam = $_POST['naam'];
-    $adres = $_POST['adres'];
-    // Maak een nieuwe familie aan en bewaar het bericht
-    $message = $familiesController->create($naam, $adres);
+    $naam = htmlspecialchars(trim($_POST['naam']));
+    $adres = htmlspecialchars(trim($_POST['adres']));
+    $message = $familiesController->create(['naam' => $naam, 'adres' => $adres]);
 }
 ?>
 
@@ -57,17 +57,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <h2>Nieuwe Familie Toevoegen</h2>
             <!-- Toon bericht na het aanmaken van een familie -->
             <?php if ($message): ?>
-            <div class="message"><?php echo htmlspecialchars($message); ?></div>
+                <div class="notification <?= strpos($message, 'Fout') === 0 ? 'error' : 'success'; ?>">
+                    <?php echo htmlspecialchars($message); ?>
+                </div>
             <?php endif; ?>
             <!-- Formulier om een nieuwe familie toe te voegen -->
             <form method="post" action="create.php">
                 <div>
                     <label for="naam">Naam</label>
-                    <input type="text" id="naam" name="naam" required>
+                    <input type="text" id="naam" name="naam" value="<?= htmlspecialchars($_POST['naam'] ?? '') ?>" required>
                 </div>
                 <div>
                     <label for="adres">Adres</label>
-                    <input type="text" id="adres" name="adres" required>
+                    <input type="text" id="adres" name="adres" value="<?= htmlspecialchars($_POST['adres'] ?? '') ?>" required>
                 </div>
                 <div>
                     <button type="submit">Toevoegen</button>

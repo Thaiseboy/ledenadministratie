@@ -19,7 +19,7 @@ if (!$conn) {
 // Maak een nieuwe FamiliesController aan met de database verbinding
 $familiesController = new FamiliesController($conn);
 // Haal alle families op
-$families = $familiesController->readAll();
+$families = $familiesController->index();
 ?>
 
 <!DOCTYPE html>

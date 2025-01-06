@@ -1,66 +1,62 @@
 <?php
 class FamiliesController {
-    private $conn;
+    private $model;
 
-    // Constructor om de databaseverbinding te initialiseren
     public function __construct($conn) {
-        $this->conn = $conn;
+        $this->model = new Familie($conn); // Verbind het model
     }
 
-    // Methode om alle families op te halen
-    public function readAll() {
-        $sql = "SELECT * FROM familie";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function index() {
+        return $this->model->getAll(); // Retourneer alle families
     }
 
-    // Methode om een familie toe te voegen
-    public function create($naam, $adres) {
-        $sql = "INSERT INTO familie (naam, adres) VALUES (:naam, :adres)";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':naam', $naam);
-        $stmt->bindParam(':adres', $adres);
-        if ($stmt->execute()) {
-            return "Familie succesvol aangemaakt.";
+    public function create($data) {
+        if (isset($data['naam']) && isset($data['adres'])) {
+            $success = $this->model->create($data['naam'], $data['adres']);
+            if ($success) {
+                return "Familie succesvol toegevoegd!";
+            } else {
+                return "Fout bij het aanmaken van familie.";
+            }
         } else {
-            return "Error creating record: " . implode(", ", $stmt->errorInfo());
+            return "Vul alle velden in.";
         }
     }
 
-    // Methode om een familie bij te werken
-    public function update($id, $naam, $adres) {
-        $sql = "UPDATE familie SET naam = :naam, adres = :adres WHERE id = :id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $stmt->bindParam(':naam', $naam);
-        $stmt->bindParam(':adres', $adres);
-        if ($stmt->execute()) {
-            return "Familie succesvol bijgewerkt.";
+    public function edit($id, $data) {
+        // Controleer of de invoer compleet is
+        if (isset($data['naam']) && isset($data['adres'])) {
+            // Probeer de update uit te voeren via het model
+            $success = $this->model->update($id, $data['naam'], $data['adres']);
+            
+            // Retourneer een bericht gebaseerd op het resultaat
+            if ($success) {
+                return "Familie succesvol bijgewerkt!";
+            } else {
+                return "Fout bij het bijwerken van familie.";
+            }
         } else {
-            return "Error updating record: " . implode(", ", $stmt->errorInfo());
+            return "Vul alle velden in.";
         }
     }
 
-    // Methode om een familie te verwijderen
     public function delete($id) {
-        $sql = "DELETE FROM familie WHERE id = :id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        if ($stmt->execute()) {
-            return "Familie succesvol verwijderd.";
+        // Controleer of het ID betstaat
+        $familie = $this->model->getById($id);
+        if (!$familie) {
+            return "Familie met ID $id bestaat niet.";
+        }
+
+        // Probeer familie te verwijderen
+        $success = $this->model->delete($id);
+        if ($success) {
+            return "Familie succesvol verwijdert";
         } else {
-            return "Error deleting record: " . implode(", ", $stmt->errorInfo());
+            return "Fout bij het verwijeren van de familie";
         }
     }
 
-    // Methode om een familie op te halen op basis van ID
-    public function getById($id) {
-        $sql = "SELECT * FROM familie WHERE id = :id";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    public function show($id) {
+        return $this->model->getById($id); // Retourneer de gegevens van één familie
     }
 }
-?>

@@ -11,28 +11,47 @@ session_start();
 require_once '../../config/config.php';
 require_once '../../controllers/FamiliesController.php';
 
+// Controleer de databaseverbinding
+if (!$conn) {
+    die("Geen verbinding met de database.");
+}
+
 // Maak een controller aan voor families
 $familiesController = new FamiliesController($conn);
 
 // Controleer of er een ID is meegegeven, anders omleiden naar de weergavepagina
-if (!isset($_GET['id'])) {
-    header("Location: view.php");
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    header("Location: view.php?message=Geen geldig ID opgegeven.");
     exit();
 }
 
 // Haal de familie op basis van het ID
-$familie = $familiesController->getById($_GET['id']);
+$familie = $familiesController->show($_GET['id']); // Gebruik de correcte methode
 
+// Controleer of de familie bestaat
+if (!$familie) {
+    header("Location: view.php?message=Familie niet gevonden.");
+    exit();
+}
+
+// Initialiseer het bericht
 $message = '';
 
-// Verwerken van het formulier bij een POST verzoek
+// Verwerken van het formulier bij een POST-verzoek
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $naam = $_POST['naam'];
-    $adres = $_POST['adres'];
-    // Update de familie en bewaar het bericht
-    $message = $familiesController->update($_GET['id'], $naam, $adres);
-    header("Location: view.php?message=" . urlencode($message));
-    exit();
+    // Valideer en ontsmet de invoer
+    $naam = htmlspecialchars(trim($_POST['naam']));
+    $adres = htmlspecialchars(trim($_POST['adres']));
+
+    // Controleer of beide velden zijn ingevuld
+    if (empty($naam) || empty($adres)) {
+        $message = "Vul alle velden in.";
+    } else {
+        // Update de familie en bewaar het bericht
+        $message = $familiesController->edit($_GET['id'], ['naam' => $naam, 'adres' => $adres]);
+        header("Location: view.php?message=" . urlencode($message));
+        exit();
+    }
 }
 ?>
 
@@ -61,19 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </nav>
         <div class="content">
             <h2>Familie Bewerken</h2>
+            <!-- Toon bericht na bewerking -->
             <?php if ($message): ?>
-            <div class="message"><?php echo htmlspecialchars($message); ?></div>
+            <div class="message"><?= htmlspecialchars($message) ?></div>
             <?php endif; ?>
-            <form method="post" action="edit.php?id=<?php echo htmlspecialchars($_GET['id']); ?>">
+            <!-- Formulier om een familie te bewerken -->
+            <form method="post" action="edit.php?id=<?= htmlspecialchars($_GET['id']) ?>">
                 <div>
                     <label for="naam">Naam</label>
-                    <input type="text" id="naam" name="naam" value="<?php echo htmlspecialchars($familie['naam']); ?>"
-                        required>
+                    <input type="text" id="naam" name="naam" value="<?= htmlspecialchars($familie['naam']) ?>" required>
                 </div>
                 <div>
                     <label for="adres">Adres</label>
-                    <input type="text" id="adres" name="adres"
-                        value="<?php echo htmlspecialchars($familie['adres']); ?>" required>
+                    <input type="text" id="adres" name="adres" value="<?= htmlspecialchars($familie['adres']) ?>" required>
                 </div>
                 <div>
                     <button type="submit">Bijwerken</button>
