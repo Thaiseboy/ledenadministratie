@@ -9,14 +9,14 @@ session_start();
 
 // Vereiste configuratie- en controllerbestanden
 require_once '../../config/config.php';
+require_once '../../controllers/helper.php'; 
 require_once '../../controllers/ContributieController.php';
 require_once '../../controllers/FamilielidController.php';
 require_once '../../controllers/BoekjaarController.php';
 
 // Controleer de databaseverbinding
 if (!$conn) {
-    echo "Geen verbinding met de database";
-    exit();
+    die("Geen verbinding met de database");
 }
 
 // Maak controllers aan voor contributies, boekjaren en familieleden
@@ -24,58 +24,58 @@ $contributieController = new ContributieController($conn);
 $boekjaarController = new BoekjaarController($conn);
 $familielidController = new FamilielidController($conn);
 
+// Haal alle familieleden en boekjaren op voor de dropdowns
+$familieleden = $familielidController->readAll();
+$boekjaren = $boekjaarController->readAll();
+
 $message = '';
 
-// Verwerken van het formulier bij een POST verzoek
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $familielid_id = $_POST['familielid_id'];
-    $boekjaar_id = $_POST['boekjaar_id'];
-    // Bereken de leeftijd en soort lid automatisch
+    $familielid_id = sanitize($_POST['familielid_id']);
+    $boekjaar_id = sanitize($_POST['boekjaar_id']);
+
+    // Controleer of de invoer geldig is
+    if (empty($familielid_id) || empty($boekjaar_id)) {
+        $message = "Alle velden zijn verplicht.";
+        redirectWithMessage('create.php', $message);
+    }
+
+    // Haal familielid en boekjaar op uit de database
     $familielid = $familielidController->getById($familielid_id);
+    $boekjaar = $boekjaarController->getById($boekjaar_id);
+
+    if (!$familielid) {
+        $message = "Ongeldig familielid geselecteerd.";
+        redirectWithMessage('create.php', $message);
+    }
+
+    if (!$boekjaar) {
+        $message = "Ongeldig boekjaar geselecteerd.";
+        redirectWithMessage('create.php', $message);
+    }
+
+    // Bereken leeftijd op basis van geboortedatum
     $geboortedatum = new DateTime($familielid['geboortedatum']);
     $huidigeDatum = new DateTime();
     $leeftijd = $huidigeDatum->diff($geboortedatum)->y;
 
-    // Bepaal het soort lid op basis van de leeftijd
-    if ($leeftijd < 8) {
-        $soort_lid_id = 1; // Jeugd
-    } elseif ($leeftijd >= 8 && $leeftijd <= 12) {
-        $soort_lid_id = 2; // Aspirant
-    } elseif ($leeftijd >= 13 && $leeftijd <= 17) {
-        $soort_lid_id = 3; // Junior
-    } elseif ($leeftijd >= 18 && $leeftijd <= 50) {
-        $soort_lid_id = 4; // Senior
-    } else {
-        $soort_lid_id = 5; // Oudere
-    }
+    // Bereken soort lid en contributiebedrag met helperfunctie
+    $berekening = bepaalContributie($leeftijd);
+    $soort_lid_id = $berekening['soort_lid_id'];
+    $bedrag = 100 * (1 - $berekening['korting']); // Basisbedrag met korting
 
-    // Bepaal het bedrag op basis van het soort lid
-    $bedrag = 100; // Basisbedrag
-    switch ($soort_lid_id) {
-        case 1:
-            $bedrag *= 0.5; // 50% korting voor Jeugd
-            break;
-        case 2:
-            $bedrag *= 0.6; // 40% korting voor Aspirant
-            break;
-        case 3:
-            $bedrag *= 0.75; // 25% korting voor Junior
-            break;
-        case 5:
-            $bedrag *= 0.55; // 45% korting voor Oudere
-            break;
-        // Senior heeft geen korting
-    }
+    // Voeg contributie toe via de controller
+    $message = $contributieController->create([
+        'leeftijd' => $leeftijd,
+        'soort_lid_id' => $soort_lid_id,
+        'bedrag' => $bedrag,
+        'familielid_id' => $familielid_id,
+        'boekjaar_id' => $boekjaar_id,
+    ]);
 
-    // Maak een nieuwe contributie aan en bewaar het bericht
-    $message = $contributieController->create($leeftijd, $soort_lid_id, $bedrag, $familielid_id, $boekjaar_id);
-    header("Location: view.php?message=" . urlencode($message));
-    exit();
+    // Redirect naar de overzichtspagina met een succesbericht
+    redirectWithMessage('view.php', $message);
 }
-
-// Haal alle familieleden en boekjaren op voor de dropdowns
-$familieleden = $familielidController->readAll();
-$boekjaren = $boekjaarController->readAll();
 ?>
 
 <!DOCTYPE html>
@@ -104,8 +104,8 @@ $boekjaren = $boekjaarController->readAll();
         <div class="content">
             <h2>Contributie Toevoegen</h2>
             <!-- Toon bericht na het toevoegen van een contributie -->
-            <?php if ($message): ?>
-            <div class="message"><?php echo htmlspecialchars($message); ?></div>
+            <?php if (isset($_SESSION['message'])): ?>
+            <div class="message"><?php echo htmlspecialchars($_SESSION['message']); unset($_SESSION['message']); ?></div>
             <?php endif; ?>
             <!-- Formulier om een nieuwe contributie toe te voegen -->
             <form method="post" action="create.php">
@@ -114,8 +114,8 @@ $boekjaren = $boekjaarController->readAll();
                     <select id="familielid_id" name="familielid_id" required>
                         <option value="">Selecteer een familielid</option>
                         <?php foreach ($familieleden as $familielid): ?>
-                        <option value="<?php echo htmlspecialchars($familielid['id']); ?>">
-                            <?php echo htmlspecialchars($familielid['naam']); ?>
+                        <option value="<?php echo sanitize($familielid['id']); ?>">
+                            <?php echo sanitize($familielid['naam']); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
@@ -125,8 +125,8 @@ $boekjaren = $boekjaarController->readAll();
                     <select id="boekjaar_id" name="boekjaar_id" required>
                         <option value="">Selecteer een boekjaar</option>
                         <?php foreach ($boekjaren as $boekjaar): ?>
-                        <option value="<?php echo htmlspecialchars($boekjaar['id']); ?>">
-                            <?php echo htmlspecialchars($boekjaar['jaar']); ?>
+                        <option value="<?php echo sanitize($boekjaar['id']); ?>">
+                            <?php echo sanitize($boekjaar['jaar']); ?>
                         </option>
                         <?php endforeach; ?>
                     </select>

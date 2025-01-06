@@ -15,7 +15,7 @@ require_once '../../controllers/ContributieController.php';
 $contributieController = new ContributieController($conn);
 
 // Haal alle contributies op met de namen van soort leden en familielid
-$contributies = $contributieController->readAllWithDetails();
+$contributies = $contributieController->readAll();
 
 $message = isset($_GET['message']) ? $_GET['message'] : '';
 ?>

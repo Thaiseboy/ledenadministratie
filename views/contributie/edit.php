@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Haal alle familieleden en boekjaren op voor de dropdowns
 $familieleden = $familielidController->readAll();
-$boekjaren = $boekjaarController->getAll();
+$boekjaren = $boekjaarController->readAll();
 ?>
 
 <!DOCTYPE html>
