@@ -36,7 +36,7 @@ $contributie = $contributieController->getById($_GET['id']);
 $message = '';
 
 // Verwerken van het formulier bij een POST verzoek
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $leeftijd = $_POST['leeftijd'];
     $soort_lid_id = $_POST['soort_lid_id'];
     $bedrag = $_POST['bedrag'];
